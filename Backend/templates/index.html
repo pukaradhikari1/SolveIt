@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+
+
+{% block head %}
+<title>Home Page</title>
+{% endblock %}
+
+{% block body %}
+<h1>Welcome </h1>
+{% for x in thislist %}
+<p>{{x}}</p>
+{% endfor %}
+{% endblock %}
+
