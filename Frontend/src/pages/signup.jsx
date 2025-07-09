@@ -1,48 +1,67 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import axios from "axios";
+import { ToastContainer, toast } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function Signup() {
-  const [step, setStep] = useState(1); // 1 = form, 2 = OTP
+
   const [formData, setFormData] = useState({
     username: "",
     email: "",
     password: "",
     phone: "",
   });
-  const [generatedOTP, setGeneratedOTP] = useState("");
+
   const [enteredOTP, setEnteredOTP] = useState("");
+  const [showOTP, setShowOTP] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
 
   const handleFormChange = (e) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }));
   };
 
-  const handleSignupSubmit = (e) => {
+  const handleSignupSubmit = async (e) => {
     e.preventDefault();
 
-    // Simulate backend OTP generation
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    setGeneratedOTP(otp);
-    setStep(2);
-
-    // Simulate "sending" OTP
-    alert(`A verification code (OTP) has been sent to ${formData.email}: ${otp}`);
+    try {
+      const response = await axios.post("http://localhost:5000/signup", formData);
+      toast.success(response.data.message);
+      setShowOTP(true);
+    } catch (error) {
+      if (error.response) {
+        toast.error(error.response.data.error || error.response.data.message);
+      } else {
+        toast.error("Network error: Could not connect to server.");
+      }
+    }
   };
 
-  const handleOTPSubmit = (e) => {
+  const handleOTPSubmit = async (e) => {
     e.preventDefault();
-    if (enteredOTP === generatedOTP) {
-      setIsVerified(true);
-      alert("Signup successful! You may now log in.");
-    } else {
-      alert("Incorrect OTP. Please try again.");
+    try {
+      const response = await axios.post("http://localhost:5000/verify-otp", {
+        email: formData.email,
+        otp: enteredOTP
+      });
+      if (response.status === 200) {
+        toast.success(response.data.message);
+        setIsVerified(true);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "OTP verification failed");
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <ToastContainer />
       <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
-        {step === 1 ? (
+
+        {!showOTP ? (
           <>
             <h2 className="text-2xl font-bold mb-6 text-center">Sign Up</h2>
             <form onSubmit={handleSignupSubmit} className="space-y-4">
@@ -81,7 +100,10 @@ export default function Signup() {
                 className="w-full p-3 border border-gray-300 rounded-lg"
                 required
               />
-              <button className="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold">
+              <button
+                type="submit"
+                className="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold"
+              >
                 Sign Up
               </button>
             </form>
@@ -94,7 +116,7 @@ export default function Signup() {
           </>
         ) : !isVerified ? (
           <>
-            <h2 className="text-2xl font-bold mb-6 text-center">Verify Email</h2>
+            <h2 className="text-2xl font-bold mb-6 text-center">Verify Your Email</h2>
             <form onSubmit={handleOTPSubmit} className="space-y-4">
               <input
                 type="text"
@@ -104,7 +126,10 @@ export default function Signup() {
                 className="w-full p-3 border border-gray-300 rounded-lg"
                 required
               />
-              <button className="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold">
+              <button
+                type="submit"
+                className="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold"
+              >
                 Verify OTP
               </button>
             </form>
@@ -132,6 +157,7 @@ export default function Signup() {
             </div>
           </>
         )}
+
       </div>
     </div>
   );
