@@ -1,17 +1,15 @@
-import { useState } from 'react'
-import { Navbar } from './components/Navbar'
-import "./index.css"
-import { Auth } from './pages/Auth'
+import { Routes, Route, Navigate } from "react-router-dom";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import ForgotPassword from "./pages/ForgotPassword";
 
-function App() {
-  const [count, setCount] = useState(0)
-
+export default function App() {
   return (
-    <>
-      {/* <Navbar /> */}
-      <Auth />
-    </>
-  )
+    <Routes>
+      <Route path="/" element={<Navigate to="/login" />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+    </Routes>
+  );
 }
-
-export default App
