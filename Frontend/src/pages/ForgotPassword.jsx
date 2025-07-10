@@ -2,12 +2,12 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 
 export default function ForgotPassword() {
-  const [method, setMethod] = useState("email");
-  const [value, setValue] = useState("");
+  const [email, setEmail] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert(`Reset link will be sent via ${method}: ${value}`);
+    alert(`Reset link sent to ${email}`);
+    // In real app: make API call to backend
   };
 
   return (
@@ -15,39 +15,18 @@ export default function ForgotPassword() {
       <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
         <h2 className="text-2xl font-bold mb-6 text-center">Reset Password</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="flex gap-4">
-            <label className="inline-flex items-center">
-              <input
-                type="radio"
-                name="method"
-                value="email"
-                checked={method === "email"}
-                onChange={() => setMethod("email")}
-                className="mr-2"
-              />
-              Email
-            </label>
-            <label className="inline-flex items-center">
-              <input
-                type="radio"
-                name="method"
-                value="phone"
-                checked={method === "phone"}
-                onChange={() => setMethod("phone")}
-                className="mr-2"
-              />
-              Phone
-            </label>
-          </div>
           <input
-            type={method === "email" ? "email" : "tel"}
-            placeholder={`Enter your ${method}`}
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
+            type="email"
+            placeholder="Enter your registered email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             className="w-full p-3 border border-gray-300 rounded-lg"
             required
           />
-          <button className="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold">
+          <button
+            type="submit"
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 rounded-lg transition duration-300"
+          >
             Send Reset Link
           </button>
         </form>
