@@ -9,11 +9,11 @@ export default function HomePage() {
   const [profileImage, setProfileImage] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
 
-  // Sidebar position and width states
+
   const [sidebarWidth, setSidebarWidth] = useState(256);
   const [sidebarX, setSidebarX] = useState(0);
 
-  // Apply saved theme and profile image on load
+
   useEffect(() => {
     const savedImage = localStorage.getItem("profileImage");
     if (savedImage) setProfileImage(savedImage);

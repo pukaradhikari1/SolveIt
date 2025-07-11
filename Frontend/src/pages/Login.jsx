@@ -7,7 +7,7 @@ import 'react-toastify/dist/ReactToastify.css';
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const navigate = useNavigate(); // used to redirect after login
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,11 +25,10 @@ export default function Login() {
 
       toast.success(response.data.message);
 
-      // Optional: store user info/token
-      // localStorage.setItem("user", JSON.stringify(response.data.data));
+      localStorage.setItem("user", JSON.stringify(response.data.user || {}));
 
       setTimeout(() => {
-        navigate("/"); // Redirect to homepage or dashboard
+        navigate("/home");
       }, 1500);
 
     } catch (error) {

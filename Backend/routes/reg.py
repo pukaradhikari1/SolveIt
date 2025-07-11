@@ -3,7 +3,7 @@ from models import db, user
 import hashlib 
 from flask_mail import Mail, Message
 import random
-
+from datetime import datetime,timedelta
 
 reg= Blueprint('reg', __name__)
 mail = Mail()
@@ -99,3 +99,65 @@ def login():
             return jsonify({"message": "Invalid email or password"}), 401
     else:
         return jsonify({"message": "Please use POST method to login"}), 405
+
+@reg.route('/reset-request', methods=['POST'])
+def reset_request():
+    data = request.get_json()
+    email = data.get("email", "").strip().lower()
+
+    tmp = user.query.filter_by(email=email).first()
+    if not tmp:
+        return jsonify({"message": "Email not found"}), 404
+
+    otp = f"{random.randint(100000, 999999):06d}"
+    tmp.otp = otp
+    tmp.otp_sent_at = datetime.utcnow()  # ✅ Fixed usage
+    db.session.commit()
+
+    msg = Message(
+        subject="SolveIt : Password Reset OTP",
+        recipients=[email],
+        body=f"Your OTP for password reset is: {otp}. It will expire in 2 minutes. Please do not share it with anyone."
+    )
+
+    try:
+        mail.send(msg)
+        return jsonify({"message": "OTP sent successfully"}), 200
+    except Exception as e:
+        return jsonify({"message": "Failed to send OTP", "error": str(e)}), 500
+    
+@reg.route('/verify-reset-otp', methods=['POST'])
+def verify_reset_otp():
+    data = request.get_json()
+    email = data.get("email", "").strip().lower()
+    otp = data.get("otp", "").strip()
+    tmp= user.query.filter_by(email=email).first()
+    
+    if not tmp or tmp.otp != otp or not tmp.otp_sent_at:
+        return jsonify({"message": "Email not found"}), 404
+    if datetime.utcnow() - tmp.otp_sent_at > timedelta(minutes=2): 
+        return jsonify({"message": "OTP expired"}), 400
+    return jsonify({"message": "OTP verified successfully"}), 200
+
+@reg.route('/reset-password', methods=['POST'])
+def reset_password():
+    data=request.get_json()
+    email=data.get("email", "").strip().lower()
+    new_password = data.get("new_password", "").strip()
+    
+    tmp=user.query.filter_by(email=email).first()
+    
+    if not tmp:
+        return jsonify({"message": "Email not found"}),404
+    tmp.password= hash_password(new_password)
+    tmp.otp = None
+    tmp.otp_sent_at = None
+    db.session.commit()
+    return jsonify({"message": "Password changed successfully"}), 200
+    
+    
+    
+    
+    
+        
+    
