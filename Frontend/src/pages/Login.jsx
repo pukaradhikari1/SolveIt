@@ -25,10 +25,9 @@ export default function Login() {
 
       toast.success(response.data.message);
 
-      localStorage.setItem("user", JSON.stringify(response.data.user || {}));
 
       setTimeout(() => {
-        navigate("/home");
+        navigate("/");
       }, 1500);
 
     } catch (error) {

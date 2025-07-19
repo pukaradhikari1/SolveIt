@@ -3,7 +3,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
 import HomePage from "./pages/HomePage";
-
+import ProfilePage from "./pages/ProfilePage";
 export default function App() {
   const isLoggedIn = localStorage.getItem("user");
   return (
@@ -13,6 +13,7 @@ export default function App() {
       <Route path="/signup" element={<Signup />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/home" element={<HomePage />} />
+      <Route path="/profile" element={<ProfilePage />} />
     </Routes>
   );
 }

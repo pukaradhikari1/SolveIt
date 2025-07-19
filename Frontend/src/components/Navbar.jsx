@@ -1,177 +1,215 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Search, Moon, Sun } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+    Search,
+    User,
+    Home,
+    PlusCircle,
+    Bell,
+} from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import {
+    motion,
+    AnimatePresence,
+} from 'framer-motion';
+
+function NotificationPopover({ isOpen }) {
+    const notifications = [
+        { id: 1, message: 'Your answer received an upvote.' },
+        { id: 2, message: 'New comment on your question.' },
+        { id: 3, message: 'Welcome to SolveIt!' },
+    ];
+
+    if (!isOpen) return null;
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+            className="absolute right-0 mt-2 w-72 bg-white shadow-xl rounded-xl z-50 border"
+        >
+            <div className="p-4">
+                <h4 className="text-sm font-semibold text-gray-800 mb-2">
+                    Notifications
+                </h4>
+                {notifications.length > 0 ? (
+                    <ul className="space-y-2 max-h-60 overflow-y-auto">
+                        {notifications.map((n) => (
+                            <motion.li
+                                key={n.id}
+                                whileHover={{ x: 5 }}
+                                transition={{ type: 'spring', stiffness: 300 }}
+                                className="text-sm text-gray-700 border-b last:border-none pb-2 cursor-pointer"
+                            >
+                                {n.message}
+                            </motion.li>
+                        ))}
+                    </ul>
+                ) : (
+                    <p className="text-sm text-gray-500">
+                        No new notifications
+                    </p>
+                )}
+            </div>
+        </motion.div>
+    );
+}
 
 function Navbar({
     profileImage,
-    username = "User",
-    onProfileClick,
+    username = 'User',
     onAskClick,
-    onToggleTheme,
-    isDarkMode,
-    onLogout,
 }) {
-    const [dropdownOpen, setDropdownOpen] = useState(false);
-    const dropdownRef = useRef(null);
+    const navigate = useNavigate();
+    const location = useLocation();
+    const popoverRef = useRef();
 
+    const [searchQuery, setSearchQuery] = useState('');
+    const [hasUnreadNotifications, setHasUnreadNotifications] = useState(true);
+    const [showNotifications, setShowNotifications] = useState(false);
+
+    const handleSearch = (e) => {
+        if (e.key === 'Enter' && searchQuery.trim()) {
+            navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+        }
+    };
 
     useEffect(() => {
-        const handleClickOutside = (e) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-                setDropdownOpen(false);
+        const handleClickOutside = (event) => {
+            if (
+                popoverRef.current &&
+                !popoverRef.current.contains(event.target)
+            ) {
+                setShowNotifications(false);
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    const containerVariants = {
+        hidden: {},
+        visible: {
+            transition: {
+                staggerChildren: 0.1,
+            },
+        },
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: -10 },
+        visible: { opacity: 1, y: 0 },
+    };
+
     return (
-        <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm sticky top-0 z-50 p-4 flex items-center justify-between">
+        <motion.header
+            initial={{ y: -50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 70 }}
+            className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50 p-4 flex items-center justify-between"
+        >
+            {/* Logo and Search */}
             <div className="flex items-center space-x-4">
-                <h1 className="text-xl font-bold text-blue-600 dark:text-blue-400">SolveIt</h1>
-                <div className="relative">
-                    <Search className="absolute left-3 top-2.5 text-gray-400 dark:text-gray-500 w-5 h-5" />
+                <motion.h1
+                    onClick={() => navigate('/')}
+                    whileHover={{ scale: 1.05 }}
+                    className="text-xl font-bold text-blue-600 cursor-pointer flex items-center gap-2"
+                >
+                    <Home className="w-5 h-5 text-blue-500" />
+                    SolveIt
+                </motion.h1>
+
+                <motion.div
+                    variants={itemVariants}
+                    initial="hidden"
+                    animate="visible"
+                    className="relative"
+                >
+                    <Search
+                        className="absolute left-3 top-2.5 text-gray-400"
+                        aria-hidden="true"
+                    />
                     <input
                         type="text"
+                        aria-label="Search questions"
                         placeholder="Search questions..."
-                        className="pl-10 pr-4 py-2 border dark:border-gray-600 bg-white dark:bg-gray-700 text-black dark:text-white rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onKeyDown={handleSearch}
+                        className="pl-10 pr-4 py-2 border bg-white text-black rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
-                </div>
+                </motion.div>
             </div>
 
-            <div className="flex items-center space-x-4 relative" ref={dropdownRef}>
-                <button
+            {/* Action Buttons */}
+            <motion.div
+                className="flex items-center space-x-4"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+            >
+                {/* Ask Question */}
+                <motion.button
+                    variants={itemVariants}
                     onClick={onAskClick}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-full font-semibold hover:bg-blue-700 transition"
+                    whileHover={{ scale: 1.07 }}
+                    whileTap={{ scale: 0.95 }}
+                    aria-label="Ask a question"
+                    className="bg-blue-600 text-white px-4 py-2 rounded-full font-semibold hover:bg-blue-700 transition flex items-center gap-1 shadow-md"
                 >
+                    <PlusCircle className="w-4 h-4" />
                     Ask Question
-                </button>
+                </motion.button>
 
-                <button
-                    onClick={onToggleTheme}
-                    className="p-2 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition"
-                    title="Toggle Theme"
-                >
-                    {isDarkMode ? (
-                        <Sun className="w-5 h-5 text-yellow-400" />
-                    ) : (
-                        <Moon className="w-5 h-5 text-gray-600" />
-                    )}
-                </button>
-
-
-                <button
-                    onClick={() => setDropdownOpen(!dropdownOpen)}
-                    className="flex items-center space-x-2 focus:outline-none"
-                    title="Profile options"
-                    aria-haspopup="true"
-                    aria-expanded={dropdownOpen}
-                >
-                    <img
-                        src={profileImage || "https://via.placeholder.com/32"}
-                        alt="Profile"
-                        className="w-8 h-8 rounded-full border-2 border-blue-500 cursor-pointer"
-                    />
-                    <span className="hidden sm:inline text-gray-700 dark:text-gray-300 font-semibold select-none">
-                        {username}
-                    </span>
-                </button>
-
-                {dropdownOpen && (
-                    <div
-                        className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-gray-800 text-black dark:text-white rounded-xl shadow-lg border dark:border-gray-700 z-50
-            animate-fade-in slide-down"
-                        style={{ minWidth: "16rem" }}
+                {/* Notifications */}
+                <motion.div className="relative" ref={popoverRef} variants={itemVariants}>
+                    <motion.button
+                        onClick={() => {
+                            setShowNotifications((prev) => !prev);
+                            setHasUnreadNotifications(false);
+                        }}
+                        whileHover={{ rotate: [0, -10, 10, -10, 0] }}
+                        transition={{ duration: 0.5 }}
+                        aria-label="View notifications"
+                        className="relative p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition shadow"
                     >
-                        <div className="p-4 border-b dark:border-gray-600 font-semibold text-blue-600 dark:text-blue-400 select-none">
-                            Profile Options
-                        </div>
-                        <ul className="divide-y divide-gray-200 dark:divide-gray-700 text-sm">
-                            <li
-                                className="p-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
-                                onClick={() => {
-                                    setDropdownOpen(false);
-                                    alert("Overview clicked");
-                                }}
-                            >
-                                Overview
-                            </li>
-                            <li
-                                className="p-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
-                                onClick={() => {
-                                    setDropdownOpen(false);
-                                    alert("Tags clicked");
-                                }}
-                            >
-                                Tags
-                            </li>
-                            <li
-                                className="p-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
-                                onClick={() => {
-                                    setDropdownOpen(false);
-                                    alert("Upload clicked");
-                                }}
-                            >
-                                Upload Profile Picture
-                            </li>
-                            <li
-                                className="p-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
-                                onClick={() => {
-                                    setDropdownOpen(false);
-                                    alert("Edit clicked");
-                                }}
-                            >
-                                Edit Info
-                            </li>
-                            <li
-                                className="p-3 text-red-600 hover:bg-red-50 dark:hover:bg-red-900 cursor-pointer font-semibold"
-                                onClick={() => {
-                                    setDropdownOpen(false);
-                                    if (onLogout) onLogout();
-                                    else alert("Logged out");
-                                }}
-                            >
-                                Logout
-                            </li>
-                            <li
-                                className="p-3 text-red-600 hover:bg-red-50 dark:hover:bg-red-900 cursor-pointer"
-                                onClick={() => {
-                                    setDropdownOpen(false);
-                                    alert("Delete clicked");
-                                }}
-                            >
-                                Delete Profile
-                            </li>
-                        </ul>
-                    </div>
-                )}
-            </div>
+                        <Bell className="w-5 h-5 text-blue-600" />
+                        {hasUnreadNotifications && (
+                            <>
+                                <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-ping" />
+                                <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full" />
+                            </>
+                        )}
+                    </motion.button>
 
-            {/* Add these animation styles to your global CSS or tailwind config */}
-            <style jsx>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-        @keyframes slideDown {
-          from {
-            transform: translateY(-10px);
-          }
-          to {
-            transform: translateY(0);
-          }
-        }
-        .animate-fade-in {
-          animation: fadeIn 0.25s ease forwards;
-        }
-        .slide-down {
-          animation: slideDown 0.25s ease forwards;
-        }
-      `}</style>
-        </header>
+                    <AnimatePresence>
+                        <NotificationPopover isOpen={showNotifications} />
+                    </AnimatePresence>
+                </motion.div>
+
+                {/* Profile Button */}
+                <motion.button
+                    variants={itemVariants}
+                    onClick={() => navigate('/profile')}
+                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ scale: 1.1 }}
+                    aria-label="Go to Profile"
+                    className={`focus:outline-none p-1 rounded-full ${location.pathname === '/profile' ? 'ring-2 ring-blue-400' : ''
+                        }`}
+                >
+                    {profileImage ? (
+                        <img
+                            src={profileImage}
+                            alt={`${username}'s profile`}
+                            className="w-8 h-8 rounded-full border-2 border-blue-500 cursor-pointer"
+                        />
+                    ) : (
+                        <User className="w-8 h-8 text-blue-600 cursor-pointer" />
+                    )}
+                </motion.button>
+            </motion.div>
+        </motion.header>
     );
 }
 

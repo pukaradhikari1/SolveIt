@@ -91,7 +91,7 @@ export default function ForgotResetFlow() {
               />
               <button
                 type="submit"
-                className="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600"
+                className="w-full bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600"
               >
                 Verify OTP
               </button>
@@ -119,7 +119,7 @@ export default function ForgotResetFlow() {
               />
               <button
                 type="submit"
-                className="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600"
+                className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700"
               >
                 Change Password
               </button>
