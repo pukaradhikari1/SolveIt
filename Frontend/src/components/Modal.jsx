@@ -10,11 +10,17 @@ function Modal({ onClose, editData }) {
   const [title, setTitle] = useState(editData?.title || "");
   const [details, setDetails] = useState(editData?.details || "");
   const [files, setFiles] = useState([]);
-  const [tags, setTags] = useState(editData?.tags || []);
+  const [tag, setTag] = useState("");
+  const [availableTags, setAvailableTags] = useState([]);
   const [tagInput, setTagInput] = useState("");
 
   const [error, setError] = useState("");
-
+  useEffect(() => {
+    fetch("http://localhost:5000/tags")
+      .then((res) => res.json())
+      .then((data) => setAvailableTags(data))
+      .catch((err) => console.error("Failed to load tags", err));
+  }, []);
   useEffect(() => {
     const centerModal = () => {
       if (modalRef.current) {
@@ -69,18 +75,50 @@ function Modal({ onClose, editData }) {
     setTags(tags.filter((tag) => tag !== tagToRemove));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!title.trim()) {
       setError("Please enter a question title.");
       return;
     }
-    alert(
-      `Question submitted:\nTitle: ${title}\nDetails: ${details}\nTags: ${tags.join(
-        ", "
-      )}\nFiles: ${files.map((f) => f.name).join(", ")}`
-    );
-    onClose();
+
+    if (!tag) {
+      setError("Please select a tag.");
+      return;
+    }
+
+    const user_id = localStorage.getItem("user_id");
+    if (!user_id) {
+      setError("You must be logged in to submit a question.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("tag", tag); // One tag only
+    formData.append("body", details);
+    formData.append("user_id", user_id);
+    if (files.length > 0) {
+      formData.append("file", files[0]); // Only first file
+    }
+
+    try {
+      const response = await fetch("http://localhost:5000/questions", {
+        method: "POST",
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to post question.");
+      }
+
+      onClose(); // Close modal after success
+    } catch (error) {
+      console.error(error);
+      setError(error.message);
+    }
   };
+
 
   return (
     <div
@@ -129,28 +167,18 @@ function Modal({ onClose, editData }) {
         ></textarea>
 
         {/* Tags */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-2">Tags</label>
-          <div className="flex flex-wrap items-center gap-2 p-2 border rounded-lg bg-white dark:bg-gray-800 dark:border-gray-700">
-            {tags.map((tag, idx) => (
-              <span
-                key={idx}
-                className="bg-blue-100 dark:bg-blue-700 text-blue-800 dark:text-white text-xs font-semibold px-2 py-1 rounded-full flex items-center gap-1"
-              >
-                {tag}
-                <button onClick={() => removeTag(tag)} className="text-xs ml-1">×</button>
-              </span>
-            ))}
-            <input
-              type="text"
-              placeholder="Add tag"
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              onKeyDown={handleTagAdd}
-              className="flex-1 text-sm bg-transparent text-gray-800 dark:text-white border-none outline-none"
-            />
-          </div>
-        </div>
+        <select
+          className="w-full p-3 border rounded"
+          value={tag}
+          onChange={(e) => setTag(e.target.value)}
+          required
+        >
+          <option value="" disabled>Select a Tag</option>
+          {availableTags.map((t, index) => (
+            <option key={index} value={t}>{t}</option>
+          ))}
+        </select>
+
 
         {/* File Upload */}
         <label className="block mb-4">
@@ -159,27 +187,26 @@ function Modal({ onClose, editData }) {
           </span>
           <input
             type="file"
-            multiple
             onChange={handleFileChange}
             className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0
               file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100
-              dark:file:bg-gray-700 dark:file:text-white dark:hover:file:bg-gray-600"
+              "
           />
         </label>
 
         {files.length > 0 && (
-          <ul className="mb-4 text-sm text-gray-800 dark:text-gray-300 list-disc pl-5">
+          <ul className="mb-4 text-sm text-gray-800 ">
             {files.map((file, index) => (
               <li key={index}>{file.name}</li>
             ))}
           </ul>
         )}
-
         <motion.button
+          type="button"
           onClick={handleSubmit}
-          whileHover={{ scale: 1.02 }}
+          whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
-          className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-2 rounded-full font-semibold shadow-md hover:shadow-lg transition"
+          className="mt-4 w-full bg-blue-600 text-white py-2 rounded-full font-semibold hover:bg-blue-700 transition"
         >
           {editData ? "Update Question" : "Submit Question"}
         </motion.button>

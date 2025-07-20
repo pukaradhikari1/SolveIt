@@ -19,15 +19,17 @@ export default function Login() {
 
     try {
       const response = await axios.post("http://localhost:5000/login", {
-        email: email,
-        password: password
+        email,
+        password
       });
 
       toast.success(response.data.message);
 
+      localStorage.setItem('user_id', response.data.user_id);
+      localStorage.setItem('username', response.data.username);
 
       setTimeout(() => {
-        navigate("/");
+        navigate("/home");
       }, 1500);
 
     } catch (error) {
