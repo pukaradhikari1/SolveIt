@@ -90,15 +90,15 @@ def login():
 
             return jsonify({
                 "message": "Login successful",
-                "data": {
-                    "username": user_data.username,
-                    "email": user_data.email
-                }
+                "user_id": user_data.id,
+                "username": user_data.username,
+                "email": user_data.email
             }), 200
         else:
             return jsonify({"message": "Invalid email or password"}), 401
     else:
         return jsonify({"message": "Please use POST method to login"}), 405
+
 
 @reg.route('/reset-request', methods=['POST'])
 def reset_request():

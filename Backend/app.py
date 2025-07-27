@@ -8,8 +8,6 @@ from flask_mail import Mail
 
 app= Flask(__name__)
 app.config.from_object(Config)
-app.config['MAX_CONTENT_LENGTH'] = 4 * 1024 * 1024  # 4MB max file size to be uploaded for questions and answers
-
 
 CORS(app, supports_credentials=True)
 

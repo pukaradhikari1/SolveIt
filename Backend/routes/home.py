@@ -49,7 +49,6 @@ def create_question():
 def get_questions():
     questions = Question.query.order_by(Question.created_at.desc()).all()
     data = []
-
     for q in questions:
         data.append({
             "id": q.id,
@@ -58,10 +57,10 @@ def get_questions():
             "tag": q.tag,
             "file_url": q.file_url,
             "created_at": q.created_at.isoformat(),
-            "username": q.user.name if q.user else "Anonymous"
+            "username": q.user.username if q.user else "Anonymous"
         })
-
     return jsonify(data)
+
 
 @home.route('/tags', methods=['GET'])
 def get_tags():
