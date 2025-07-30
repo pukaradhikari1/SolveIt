@@ -1,7 +1,9 @@
+
 from flask import Blueprint, request, jsonify
 from models import db, user, Question
 from datetime import datetime
 import os
+from werkzeug.utils import secure_filename
 from tag import TAGS  # <-- import your predefined tag list
 
 home = Blueprint("home", __name__)
@@ -65,3 +67,67 @@ def get_questions():
 @home.route('/tags', methods=['GET'])
 def get_tags():
     return jsonify(TAGS), 200
+@home.route('/tags_list', methods=['GET'])
+def get_tags_list():
+    return jsonify(TAGS), 200
+
+PROFILE_UPLOAD_FOLDER = "static/uploads/profile_images"
+ALLOWED_PROFILE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+def allowed_profile_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_PROFILE_EXTENSIONS
+
+@home.route('/profile/<int:user_id>', methods=['GET'])
+def get_profile(user_id):
+    u = user.query.get(user_id)
+    if not u:
+        return jsonify({"error": "User not found"}), 404
+    return jsonify({
+        "user_id": u.id,
+        "username": u.username,
+        "email": u.email,
+        "phone": u.phone,
+        "bio": u.bio or "",
+        "profileImage": u.profile_image_url or "https://via.placeholder.com/150"
+    })
+
+@home.route('/profile/<int:user_id>/image', methods=['POST'])
+def upload_profile_image(user_id):
+    u = user.query.get(user_id)
+    if not u:
+        return jsonify({"error": "User not found"}), 404
+
+    if 'file' not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
+
+    file = request.files['file']
+    if file.filename == '' or not allowed_profile_file(file.filename):
+        return jsonify({"error": "Invalid file"}), 400
+
+    os.makedirs(PROFILE_UPLOAD_FOLDER, exist_ok=True)
+    filename = secure_filename(f"user_{user_id}_{file.filename}")
+    filepath = os.path.join(PROFILE_UPLOAD_FOLDER, filename)
+    file.save(filepath)
+
+    from flask import url_for
+    rel_path = f"uploads/profile_images/{filename}"
+    full_url = url_for('static', filename=rel_path, _external=True)
+
+    u.profile_image_url = full_url
+    db.session.commit()
+    return jsonify({
+        "message": "Image uploaded",
+        "profileImage": full_url,
+    })
+
+
+
+
+@home.route('/profile/<int:user_id>', methods=['DELETE'])
+def delete_profile(user_id):
+    u = user.query.get(user_id)
+    if not u:
+        return jsonify({"error": "User not found"}), 404
+    db.session.delete(u)
+    db.session.commit()
+    return jsonify({"message": "User deleted"})

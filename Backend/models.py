@@ -13,7 +13,10 @@ class user(db.Model):
     otp = db.Column(db.String(6))           
     is_verified = db.Column(db.Boolean, default=False)
     otp_sent_at = db.Column(db.DateTime, default=None)  
+    bio = db.Column(db.String(500), default="")
+    profile_image_url = db.Column(db.String(300), default=None)
     questions = db.relationship('Question', back_populates='user', lazy=True)
+
 
 
 class Question(db.Model):
