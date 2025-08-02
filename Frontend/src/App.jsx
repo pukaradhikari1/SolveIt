@@ -4,6 +4,7 @@ import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
 import HomePage from "./pages/HomePage";
 import ProfilePage from "./pages/ProfilePage";
+
 export default function App() {
   const isLoggedIn = localStorage.getItem("user");
   return (
