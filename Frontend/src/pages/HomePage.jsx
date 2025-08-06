@@ -6,6 +6,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../Components/Footer";
 import Modal from "../components/Modal";
 
+
 const cardVariants = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 }, hover: { scale: 1.03, boxShadow: "0 10px 20px rgba(59,130,246,0.3)" } };
 
 export default function HomePage() {
@@ -56,6 +57,7 @@ export default function HomePage() {
           )}
           <div className="container mx-auto max-w-6xl space-y-6">
             {questions.map((post) => (
+
               <motion.div
                 key={post.id}
                 className="bg-white p-6 rounded-2xl shadow cursor-pointer flex flex-col"
@@ -64,6 +66,7 @@ export default function HomePage() {
                 animate="visible"
                 whileHover="hover"
                 transition={{ duration: 0.3, ease: "easeInOut" }}
+                onClick={() => navigate(`/question/${post.id}`)}
               >
                 <div className="flex items-center mb-4">
                   <img
@@ -100,6 +103,7 @@ export default function HomePage() {
                   </a>
                 )}
               </motion.div>
+
             ))}
           </div>
         </main>

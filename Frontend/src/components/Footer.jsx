@@ -14,7 +14,7 @@ function Footer() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className="bg-white dark:bg-gray-900 border-t border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 text-xs"
+      className="bg-white border-t border-gray-300 text-gray-600 text-xs"
     >
       <div className="max-w-screen-xl mx-auto px-6 py-4 flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0">
         {/* Links */}

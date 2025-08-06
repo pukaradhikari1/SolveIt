@@ -44,8 +44,15 @@ class Question(db.Model):
         "created_at": self.created_at.isoformat(),
         "updated_at": self.updated_at.isoformat(),
         "user_id": self.user_id,
-        "username": self.user.username if self.user else None
+        "username": self.user.username if self.user else None,
+        "votes": self.vote_count
     }
+
+    @property
+    def vote_count(self):
+        upvotes = Votes.query.filter_by(object_id=self.id, content_type='question', vote_type=1).count()
+        downvotes = Votes.query.filter_by(object_id=self.id, content_type='question', vote_type=-1).count()
+        return upvotes - downvotes
 
 
 class Answer(db.Model):
@@ -59,6 +66,12 @@ class Answer(db.Model):
     question = db.relationship("Question", back_populates="answers")
     user = db.relationship("user", back_populates="answers")
     
+    @property
+    def vote_count(self):
+        upvotes = Votes.query.filter_by(object_id=self.id, content_type='answer', vote_type=1).count()
+        downvotes = Votes.query.filter_by(object_id=self.id, content_type='answer', vote_type=-1).count()
+        return upvotes - downvotes
+
     def to_dict(self):
         return {
             "id": self.id,
@@ -67,8 +80,11 @@ class Answer(db.Model):
             "updated_at": self.updated_at.isoformat(),
             "question_id": self.question_id,
             "user_id": self.user_id,
-            "username": self.user.username if self.user else None
+            "username": self.user.username if self.user else None,
+            "votes": self.vote_count
         }
+    
+
 
 class Votes(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -95,4 +111,3 @@ class Votes(db.Model):
             return Answer.query.get(self.object_id)
         return None
     
-

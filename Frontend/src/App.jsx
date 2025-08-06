@@ -4,6 +4,9 @@ import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
 import HomePage from "./pages/HomePage";
 import ProfilePage from "./pages/ProfilePage";
+import QuestionDetail from "./pages/QuestionDetail";
+
+
 
 export default function App() {
   const isLoggedIn = localStorage.getItem("user");
@@ -15,6 +18,7 @@ export default function App() {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/home" element={<HomePage />} />
       <Route path="/profile" element={<ProfilePage />} />
+      <Route path="/question/:id" element={<QuestionDetail />} />
     </Routes>
   );
 }

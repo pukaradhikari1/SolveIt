@@ -1,9 +1,10 @@
 from flask import Blueprint, request, jsonify
-from models import db, user, Question
+from models import db, user, Question, Answer
 from datetime import datetime
 import os
 from werkzeug.utils import secure_filename
-from tag import TAGS  # <-- import your predefined tag list
+from tag import TAGS 
+
 
 home = Blueprint("home", __name__)
 
@@ -51,17 +52,20 @@ def get_questions():
     questions = Question.query.order_by(Question.created_at.desc()).all()
     data = []
     for q in questions:
-        data.append(
-            {
-                "id": q.id,
-                "title": q.title,
-                "body": q.body,
-                "tag": q.tag,
-                "file_url": q.file_url,
-                "created_at": q.created_at.isoformat(),
-                "username": q.user.username if q.user else "Anonymous",
-            }
-        )
+        data.append({
+            "id": q.id,
+            "title": q.title,
+            "body": q.body,
+            "tag": q.tag,
+            "file_url": q.file_url,
+            "created_at": q.created_at.isoformat(),
+            "username": q.user.username if q.user else "Anonymous",
+            "user_profile_url": (
+                q.user.profile_image_url
+                if q.user and hasattr(q.user, "profile_image_url") and q.user.profile_image_url
+                else "/static/profile_pics/default.png"
+            ),
+        })
     return jsonify(data)
 
 
@@ -210,6 +214,52 @@ def get_question(id):
         "title": q.title,
         "body": q.body,
         "tag": q.tag,
-        "username": q.username, 
+        "username": q.user.username if q.user else "Anonymous", 
         "created_at": q.created_at.isoformat() if q.created_at else None
     })
+
+@home.route("/questions/<int:id>/answers", methods=["POST"])
+def submit_answer(id):
+    body = request.form.get("body")
+    question_id = id
+    user_id = request.form.get("user_id")
+    file = request.files.get("file")
+
+    if not all([body, question_id, user_id]):
+        return jsonify({"error": "Missing fields"}), 400
+
+    file_url = None
+    if file and allowed_file(file.filename):
+        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+        filepath = os.path.join(UPLOAD_FOLDER, file.filename)
+        file.save(filepath)
+        file_url = "/" + filepath
+
+
+    new_answer = Answer(
+        body=body,
+        question_id=question_id,
+        user_id=user_id,
+        file_url=file_url
+    )
+    db.session.add(new_answer)
+    db.session.commit()
+
+    return jsonify({"message": "Answer submitted successfully"}), 201
+
+
+@home.route("/questions/<int:id>/answers", methods=["GET"])
+def get_answers(id):
+    answers = Answer.query.filter_by(question_id=id).order_by(Answer.created_at.desc()).all()
+    result = []
+    for answer in answers:
+        result.append({
+            "id": answer.id,
+            "body": answer.body,
+            "user_id": answer.user_id,
+            "username": answer.user.username if answer.user else "Anonymous",
+            "user_profile_url": answer.user.profile_image_url if answer.user and answer.user.profile_image_url else "/static/profile_pics/default.png",
+            "file_url": answer.file_url,
+            "created_at": answer.created_at.isoformat() if answer.created_at else None
+        })
+    return jsonify(result), 200
