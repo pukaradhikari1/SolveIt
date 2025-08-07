@@ -111,7 +111,7 @@ def reset_request():
 
     otp = f"{random.randint(100000, 999999):06d}"
     tmp.otp = otp
-    tmp.otp_sent_at = datetime.utcnow()  # ✅ Fixed usage
+    tmp.otp_sent_at = datetime.utcnow()  
     db.session.commit()
 
     msg = Message(
